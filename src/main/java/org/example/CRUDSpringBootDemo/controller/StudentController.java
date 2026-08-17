@@ -22,9 +22,10 @@ public class StudentController {
 
     // create student
     @PostMapping
-    public ResponseEntity<Student> createStudent(@RequestBody Student student){
+    public ResponseEntity<Student> createStudent(@RequestBody Student studentRequest){
 
-        Student cretaedStudent = studentService.createStudent(student);
+        studentRequest.setDeleted(false);
+        Student cretaedStudent = studentService.createStudent(studentRequest);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(cretaedStudent);
@@ -34,6 +35,7 @@ public class StudentController {
     // read one student
     @GetMapping("/{id}")
     public ResponseEntity<Student> getStudentById(@PathVariable Long id){
+
         Student studentResponse = studentService.getStudent(id);
         if(studentResponse == null){
             return ResponseEntity.notFound().build();
@@ -41,8 +43,9 @@ public class StudentController {
         return ResponseEntity.status(HttpStatus.OK).body(studentResponse);
     }
 
+    // select * from student where id = 1 and deleted = false
 
-    // read all student
+    // get/read all student
     @GetMapping()
     public ResponseEntity<List<Student>> getAllStudent(){
         List<Student> studentList = studentService.getAllStudents();
@@ -75,5 +78,16 @@ public class StudentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("nothing found");
         }
         return ResponseEntity.status(HttpStatus.OK).body("deleted");
+    }
+
+
+    // soft-delete
+    @PatchMapping("/{id}")
+    public ResponseEntity<String>  deleteStudentSoftly(@PathVariable Long id){
+        Boolean isDeleted = studentService.deleteStudentSoftly(id);
+        if(!isDeleted){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("nothing found");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body("record deleted softly");
     }
 }
