@@ -1,5 +1,10 @@
 package org.example.CRUDSpringBootDemo.controller;
 
+import jakarta.validation.Valid;
+import org.example.CRUDSpringBootDemo.dto.CreateStudentRequestDto;
+import org.example.CRUDSpringBootDemo.dto.CreateStudentResponseDto;
+import org.example.CRUDSpringBootDemo.dto.UpdateStudentRequestDto;
+import org.example.CRUDSpringBootDemo.dto.UpdateStudentResponseDto;
 import org.example.CRUDSpringBootDemo.entity.Student;
 import org.example.CRUDSpringBootDemo.service.StudentService;
 import org.springframework.http.HttpStatus;
@@ -21,22 +26,22 @@ public class StudentController {
     }
 
     // create student
-    @PostMapping
-    public ResponseEntity<Student> createStudent(@RequestBody Student studentRequest){
+    @PostMapping("/create")
+    public ResponseEntity<CreateStudentResponseDto> createStudent(
+            @Valid @RequestBody CreateStudentRequestDto createStudentRequestDto){
 
-        studentRequest.setDeleted(false);
-        Student cretaedStudent = studentService.createStudent(studentRequest);
+        CreateStudentResponseDto createdStudent = studentService.createStudent(createStudentRequestDto);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(cretaedStudent);
+                .body(createdStudent);
     }
 
 
     // read one student
-    @GetMapping("/{id}")
-    public ResponseEntity<Student> getStudentById(@PathVariable Long id){
+    @GetMapping("/get")
+    public ResponseEntity<CreateStudentResponseDto> getStudentById(@RequestParam Long id){
 
-        Student studentResponse = studentService.getStudent(id);
+        CreateStudentResponseDto studentResponse = studentService.getStudent(id);
         if(studentResponse == null){
             return ResponseEntity.notFound().build();
         }
@@ -46,9 +51,9 @@ public class StudentController {
     // select * from student where id = 1 and deleted = false
 
     // get/read all student
-    @GetMapping()
-    public ResponseEntity<List<Student>> getAllStudent(){
-        List<Student> studentList = studentService.getAllStudents();
+    @GetMapping("/getAll")
+    public ResponseEntity<List<CreateStudentResponseDto>> getAllStudent(){
+        List<CreateStudentResponseDto> studentList = studentService.getAllStudents();
         if(studentList.isEmpty()){
             return ResponseEntity.notFound().build();
         }
@@ -59,10 +64,10 @@ public class StudentController {
 
 
     // update student
-    @PutMapping("/{id}")
-    public ResponseEntity<Student> updateStudentById(@PathVariable Long id,
-                                                     @RequestBody Student student){
-        Student studentResponse = studentService.updateStudent(id, student);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<UpdateStudentResponseDto> updateStudentById(@PathVariable Long id,
+                                                     @RequestBody UpdateStudentRequestDto studentRequestDto){
+        UpdateStudentResponseDto studentResponse = studentService.updateStudent(id, studentRequestDto);
         if(studentResponse == null){
             return ResponseEntity.notFound().build();
         }
@@ -71,8 +76,8 @@ public class StudentController {
 
 
     // delete student
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String>  deleteStudentById(@PathVariable Long id){
+    @DeleteMapping("/delete")
+    public ResponseEntity<String>  deleteStudentById(@RequestParam Long id){
         Boolean isDeleted = studentService.deleteStudent(id);
         if(!isDeleted){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("nothing found");
@@ -82,8 +87,8 @@ public class StudentController {
 
 
     // soft-delete
-    @PatchMapping("/{id}")
-    public ResponseEntity<String>  deleteStudentSoftly(@PathVariable Long id){
+    @PatchMapping("/delete-soft")
+    public ResponseEntity<String>  deleteStudentSoftly(@RequestParam Long id){
         Boolean isDeleted = studentService.deleteStudentSoftly(id);
         if(!isDeleted){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("nothing found");

@@ -1,11 +1,14 @@
 package org.example.CRUDSpringBootDemo.service;
 
+import org.example.CRUDSpringBootDemo.dto.CreateStudentRequestDto;
+import org.example.CRUDSpringBootDemo.dto.CreateStudentResponseDto;
+import org.example.CRUDSpringBootDemo.dto.UpdateStudentRequestDto;
+import org.example.CRUDSpringBootDemo.dto.UpdateStudentResponseDto;
 import org.example.CRUDSpringBootDemo.entity.Student;
 import org.example.CRUDSpringBootDemo.repository.StudentRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,25 +22,29 @@ public class StudentService {
     }
 
     // passing request from controller to db
-    public Student createStudent(Student studentRequest){
-        Student studentResponse = studentRepository.save(studentRequest);
-        return studentResponse;
+    public CreateStudentResponseDto createStudent(CreateStudentRequestDto studentReqDto){
+        Student student = mapToEntity(studentReqDto);
+        Student studentResp =  studentRepository.save(student);
+        return mapToCreateDto(studentResp);
     }
 
-    public Student getStudent(Long id){
-        Optional<Student> studentResponse = studentRepository.findByIdAndDeletedIsFalse(id);
+    public CreateStudentResponseDto getStudent(Long id){
+        Optional<Student> studentResponse = studentRepository.findById(id);
         if(studentResponse.isPresent()){
-            return studentResponse.get();
+            return mapToCreateDto(studentResponse.get());
         }
         return null;
     }
 
-    public List<Student> getAllStudents(){
+    public List<CreateStudentResponseDto> getAllStudents(){
         List<Student> studentList = studentRepository.findByDeletedIsFalse();
-        return studentList;
+
+        return studentList.stream()
+                .map(this::mapToCreateDto)
+                .toList();
     }
 
-    public Student updateStudent(Long id, Student studentRequest){
+    public UpdateStudentResponseDto updateStudent(Long id, UpdateStudentRequestDto studentRequest){
         Optional<Student> existingStudent = studentRepository.findByIdAndDeletedIsFalse(id);
         if(existingStudent.isEmpty()){
             return null;
@@ -46,12 +53,12 @@ public class StudentService {
 
         studentToUpdate.setName(studentRequest.getName());
         studentToUpdate.setAge(studentRequest.getAge());
-        studentToUpdate.setEmail(studentRequest.getEmail());
         studentToUpdate.setRollNo(studentRequest.getRollNo());
         studentToUpdate.setSubject(studentRequest.getSubject());
-        studentToUpdate.setDeleted(false);
+        studentToUpdate.setUpdatedAt(LocalDateTime.now());
 
-        return studentRepository.save(studentToUpdate);
+        Student savedStudent = studentRepository.save(studentToUpdate);
+        return mapToUpdateDto(savedStudent);
     }
 
     public Boolean deleteStudent(Long id){
@@ -79,5 +86,53 @@ public class StudentService {
 //        studentRepository.save(existingStudent.get());
 
         return true;
+    }
+
+    private Student mapToEntity(CreateStudentRequestDto createStudentRequestDto){
+        Student student = new Student();
+
+        student.setName(createStudentRequestDto.getName());
+        student.setAge(createStudentRequestDto.getAge());
+        student.setEmail(createStudentRequestDto.getEmail());
+        student.setRollNo(createStudentRequestDto.getRollNo());
+        student.setSubject(createStudentRequestDto.getSubject());
+        student.setCreatedAt(LocalDateTime.now());
+        student.setUpdatedAt(LocalDateTime.now());
+
+        student.setDeleted(false);
+        return student;
+
+        // builder design pattern
+    }
+
+    private CreateStudentResponseDto mapToCreateDto(Student student){
+        CreateStudentResponseDto createStudentResponseDto = new CreateStudentResponseDto();
+
+        createStudentResponseDto.setId(student.getId());
+        createStudentResponseDto.setName(student.getName());
+        createStudentResponseDto.setAge(student.getAge());
+        createStudentResponseDto.setEmail(student.getEmail());
+        createStudentResponseDto.setRollNo(student.getRollNo());
+        createStudentResponseDto.setSubject(student.getSubject());
+        createStudentResponseDto.setMessage("Student saved successfully");
+        createStudentResponseDto.setCreatedAt(student.getCreatedAt());
+        createStudentResponseDto.setUpdatedAt(student.getUpdatedAt());
+
+        return createStudentResponseDto;
+    }
+
+    private UpdateStudentResponseDto mapToUpdateDto(Student savedStudent) {
+        UpdateStudentResponseDto updateStudentResponseDto = new UpdateStudentResponseDto();
+
+        updateStudentResponseDto.setId(savedStudent.getId());
+        updateStudentResponseDto.setName(savedStudent.getName());
+        updateStudentResponseDto.setAge(savedStudent.getAge());
+        updateStudentResponseDto.setEmail(savedStudent.getEmail());
+        updateStudentResponseDto.setRollNo(savedStudent.getRollNo());
+        updateStudentResponseDto.setSubject(savedStudent.getSubject());
+        updateStudentResponseDto.setMessage("Student updated successfully");
+        updateStudentResponseDto.setUpdatedAt(LocalDateTime.now());
+
+        return updateStudentResponseDto;
     }
 }
